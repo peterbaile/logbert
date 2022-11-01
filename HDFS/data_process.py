@@ -78,7 +78,7 @@ def hdfs_sampling(log_file, window='session'):
     print("hdfs sampling done")
 
 
-def generate_train_test(hdfs_sequence_file, n=None, normal_ratio=0.03, abnormal_ratio=0.1):
+def generate_train_test(hdfs_sequence_file, n=None, n_normal=None, n_abnormal=None, normal_ratio=0.03, abnormal_ratio=0.1):
     blk_label_dict = {}
     blk_label_file = os.path.join(input_dir, "anomaly_label.csv")
     blk_df = pd.read_csv(blk_label_file)
@@ -94,8 +94,8 @@ def generate_train_test(hdfs_sequence_file, n=None, normal_ratio=0.03, abnormal_
     abnormal_seq = seq[seq["Label"] == 1]["EventSequence"]
     abnormal_seq = abnormal_seq.sample(frac=1, random_state=20) # shuffle abnormal data
     normal_len, abnormal_len = len(normal_seq), len(abnormal_seq)
-    train_normal_len = n if n else int(normal_len * normal_ratio)
-    train_abnormal_len = n if n else int(abnormal_len * abnormal_ratio)
+    train_normal_len = n_normal if n_normal else int(normal_len * normal_ratio)
+    train_abnormal_len = n_abnormal if n_abnormal else int(abnormal_len * abnormal_ratio)
     print("normal size {0}, abnormal size {1}, normal training size {2}, abnormal training size {3}".format(normal_len, abnormal_len, train_normal_len, train_abnormal_len))
 
     train = pd.concat([normal_seq.iloc[:train_normal_len], abnormal_seq[:train_abnormal_len]])
@@ -121,4 +121,4 @@ if __name__ == "__main__":
     parser(input_dir, output_dir, log_file, log_format, 'drain')
     mapping()
     hdfs_sampling(log_structured_file)
-    generate_train_test(log_sequence_file)
+    generate_train_test(log_sequence_file, n_normal=2500, n_abnormal=7500)
