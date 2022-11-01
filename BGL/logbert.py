@@ -1,34 +1,36 @@
 import sys
 sys.path.append("../")
-sys.path.append("../../")
-
-import os
-dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, '../deeplog')
+# sys.path.append("../../")
+#
+# import os
+# dirname = os.path.dirname(__file__)
+# filename = os.path.join(dirname, '../deeplog')
 
 
 import argparse
-import torch
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from bert_pytorch.dataset import WordVocab
 from bert_pytorch import Predictor, Trainer
-from bert_pytorch.dataset.utils import seed_everything
+from logdeep.tools.utils import *
 
 options = dict()
 options['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
-options["output_dir"] = "../output/hdfs-0.3-10/"
+
+options["output_dir"] = "../output/bgl/"
 options["model_dir"] = options["output_dir"] + "bert/"
 options["model_path"] = options["model_dir"] + "best_bert.pth"
-options["train_vocab"] = options["output_dir"] + "train"
-options["vocab_path"] = options["output_dir"] + "vocab.pkl"  # pickle file
+options["train_vocab"] = options['output_dir'] + 'train'
+options["vocab_path"] = options["output_dir"] + "vocab.pkl"
 
 options["window_size"] = 128
 options["adaptive_window"] = True
 options["seq_len"] = 512
 options["max_len"] = 512 # for position embedding
 options["min_len"] = 10
-options["mask_ratio"] = 0.65
-# sample ratio
+
+options["mask_ratio"] = 0.5
+
 options["train_ratio"] = 1
 options["valid_ratio"] = 0.1
 options["test_ratio"] = 1
@@ -50,7 +52,7 @@ options["attn_heads"] = 4
 
 options["epochs"] = 200
 options["n_epochs_stop"] = 10
-options["batch_size"] = 32  # --> change it back to 32
+options["batch_size"] = 32
 
 options["corpus_lines"] = None
 options["on_memory"] = True
@@ -64,17 +66,13 @@ options["cuda_devices"] = None
 options["log_freq"] = None
 
 # predict
-options["num_candidates"] = 5
+options["num_candidates"] = 15
 options["gaussian_mean"] = 0
 options["gaussian_std"] = 1
 
-seed_everything(seed=123456)
-
-if not os.path.exists(options['model_dir']):
-    os.makedirs(options['model_dir'], exist_ok=True)
-
+seed_everything(seed=1234)
 print("device", options["device"])
-print("features logkey:{} time: {}\n".format(options["is_logkey"], options["is_time"]))
+print("features logkey:{} time: {}".format(options["is_logkey"], options["is_time"]))
 print("mask ratio", options["mask_ratio"])
 
 if __name__ == "__main__":
@@ -97,6 +95,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print("arguments", args)
+    # Trainer(options).train()
+    # Predictor(options).predict()
 
     if args.mode == 'train':
         Trainer(options).train()
@@ -105,11 +105,10 @@ if __name__ == "__main__":
         Predictor(options).predict()
 
     elif args.mode == 'vocab':
-        with open(options["train_vocab"], "r", encoding=args.encoding) as f:
-            texts = f.readlines()
-        vocab = WordVocab(texts, max_size=args.vocab_size, min_freq=args.min_freq)
-        print("VOCAB SIZE:", len(vocab))
-        print("save vocab in", options["vocab_path"])
+        with open(options["train_vocab"], 'r') as f:
+            logs = f.readlines()
+        vocab = WordVocab(logs)
+        print("vocab_size", len(vocab))
         vocab.save_vocab(options["vocab_path"])
 
 

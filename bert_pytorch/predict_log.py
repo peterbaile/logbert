@@ -33,14 +33,14 @@ def compute_anomaly(results, params, seq_threshold=0.5):
             if params['sstate'] == 'abnormal':
                 wrong_idx.append(idx)
     
-    if params['sstate'] == 'normal':
-        # store to normal idx
-        with open(params["model_dir"] + "normal_wrong_idx.pkl", 'wb') as f:
-            pickle.dump(wrong_idx, f)
-    else:
-        # store to abnormal idx
-        with open(params["model_dir"] + "abnormal_wrong_idx.pkl", 'wb') as f:
-            pickle.dump(wrong_idx, f)
+    # if params['sstate'] == 'normal':
+    #     # store to normal idx
+    #     with open(params["model_dir"] + "normal_incorrect_idx_small.pkl", 'wb') as f:
+    #         pickle.dump(wrong_idx, f)
+    # else:
+    #     # store to abnormal idx
+    #     with open(params["model_dir"] + "abnormal_incorrect_idx_small.pkl", 'wb') as f:
+    #         pickle.dump(wrong_idx, f)
 
     return total_errors
 
@@ -80,6 +80,7 @@ class Predictor():
         self.batch_size = options["batch_size"]
         self.num_workers = options["num_workers"]
         self.num_candidates = options["num_candidates"]
+        print(f'num candidates is {self.num_candidates}')
         self.output_dir = options["output_dir"]
         self.model_dir = options["model_dir"]
         self.gaussian_mean = options["gaussian_mean"]
@@ -101,14 +102,25 @@ class Predictor():
         self.mask_ratio = options["mask_ratio"]
         self.min_len=options["min_len"]
 
+        self.total_masked = 0
+        self.correct_pred = [0 for _ in range(options["num_candidates"])]
+
     def detect_logkey_anomaly(self, masked_output, masked_label):
         num_undetected_tokens = 0
         output_maskes = []
         for i, token in enumerate(masked_label):
+            self.total_masked += 1
             # output_maskes.append(torch.argsort(-masked_output[i])[:30].cpu().numpy()) # extract top 30 candidates for mask labels
+            cands = torch.argsort(-masked_output[i])
 
-            if token not in torch.argsort(-masked_output[i])[:self.num_candidates]:
-                num_undetected_tokens += 1
+            for num in range(1, self.num_candidates + 1):
+                cands_reduced = cands[:num]
+                if token not in cands_reduced:
+                    num_undetected_tokens += 1
+                
+                    # self.probs.append(masked_output[i][cands].detach().tolist())
+                else:
+                    self.correct_pred[num-1] += 1
 
         return num_undetected_tokens, [output_maskes, masked_label.cpu().numpy()]
 
@@ -174,7 +186,7 @@ class Predictor():
         data_loader = DataLoader(seq_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
                                  collate_fn=seq_dataset.collate_fn)
 
-        for idx, data in enumerate(data_loader):
+        for idx, data in enumerate(tqdm(data_loader)):
             data = {key: value.to(self.device) for key, value in data.items()}
 
             result = model(data["bert_input"], data["time_input"])
@@ -224,19 +236,19 @@ class Predictor():
                     # if dist > 0.25:
                     #     pass
 
-                if idx < 10 or idx % 1000 == 0:
-                    print(
-                        "{}, #time anomaly: {} # of undetected_tokens: {}, # of masked_tokens: {} , "
-                        "# of total logkey {}, deepSVDD_label: {} \n".format(
-                            file_name,
-                            seq_results["num_error"],
-                            seq_results["undetected_tokens"],
-                            seq_results["masked_tokens"],
-                            seq_results["total_logkey"],
-                            seq_results['deepSVDD_label']
-                        )
-                    )
-                total_results.append(seq_results)
+                # if idx < 10 or idx % 1000 == 0:
+                #     print(
+                #         "{}, #time anomaly: {} # of undetected_tokens: {}, # of masked_tokens: {} , "
+                #         "# of total logkey {}, deepSVDD_label: {} \n".format(
+                #             file_name,
+                #             seq_results["num_error"],
+                #             seq_results["undetected_tokens"],
+                #             seq_results["masked_tokens"],
+                #             seq_results["total_logkey"],
+                #             seq_results['deepSVDD_label']
+                #         )
+                #     )
+                # total_results.append(seq_results)
 
         # for time
         # return total_results, total_errors
@@ -255,6 +267,8 @@ class Predictor():
 
         start_time = time.time()
         vocab = WordVocab.load_vocab(self.vocab_path)
+        print(f'vocab_path: {self.vocab_path}')
+        print(len(vocab))
 
         scale = None
         error_dict = None
@@ -273,10 +287,20 @@ class Predictor():
 
 
         print("test normal predicting")
-        test_normal_results, test_normal_errors = self.helper(model, self.output_dir, "test_normal", vocab, scale, error_dict)
+        test_normal_results, test_normal_errors = self.helper(model, self.output_dir, "test_abnormal", vocab, scale, error_dict)
 
-        print("test abnormal predicting")
-        test_abnormal_results, test_abnormal_errors = self.helper(model, self.output_dir, "test_abnormal", vocab, scale, error_dict)
+        # with open(self.model_dir + "normal_incorrect_probs_small.pkl", 'wb') as f:
+        #     pickle.dump(self.probs, f) 
+        
+        print(f'correct {self.correct_pred}')
+        print(f'total masked {self.total_masked}')
+
+        # self.probs = []
+        # print("test abnormal predicting")
+        # test_abnormal_results, test_abnormal_errors = self.helper(model, self.output_dir, "test_abnormal", vocab, scale, error_dict)
+
+        # with open(self.model_dir + "abnormal_incorrect_probs_small.pkl", 'wb') as f:
+        #     pickle.dump(self.probs, f) 
 
         print("Saving test normal results")
         with open(self.model_dir + "test_normal_results", "wb") as f:
@@ -301,6 +325,7 @@ class Predictor():
                                                                             params=params,
                                                                             th_range=np.arange(10),
                                                                             seq_range=[0.0])
+                                                                            # np.arange(0,1,0.1)
 
         print("best threshold: {}, best threshold ratio: {}".format(best_th, best_seq_th))
         print("TP: {}, TN: {}, FP: {}, FN: {}".format(TP, TN, FP, FN))

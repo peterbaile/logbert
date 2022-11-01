@@ -12,11 +12,11 @@ input_dir  = os.path.expanduser('./dataset/hdfs/')
 log_templates_file = output_dir + log_file + "_templates.csv"
 log_sequence_file = output_dir + "hdfs_sequence.csv"
 
-normal_incorrect_file = output_dir + 'bert/normal_wrong_idx.pkl'
-abnormal_incorrect_file = output_dir + 'bert/abnormal_wrong_idx.pkl'
+normal_incorrect_file = output_dir + 'bert/normal_incorrect_idx_small.pkl'
+abnormal_incorrect_file = output_dir + 'bert/abnormal_incorrect_idx_small.pkl'
 
-test_normal_file = output_dir + 'test_normal'
-test_abnormal_file = output_dir + 'test_abnormal'
+test_normal_file = output_dir + 'test_normal_small'
+test_abnormal_file = output_dir + 'test_abnormal_small'
 
 normal_incorrect_idx = None
 abnormal_incorrect_idx = None
@@ -47,8 +47,16 @@ with open(test_abnormal_file, "r") as f:
 normal_incorrect = np.array(normal, dtype=object)[normal_incorrect_idx]
 abnormal_incorrect = np.array(abnormal, dtype=object)[abnormal_incorrect_idx]
 
-with open(output_dir + "normal_incorrect_seq.pkl", 'wb') as f:
+with open(output_dir + "normal_incorrect_seq_small.pkl", 'wb') as f:
   pickle.dump(normal_incorrect, f)
 
-with open(output_dir + "abnormal_incorrect_seq.pkl", 'wb') as f:
+with open(output_dir + "abnormal_incorrect_seq_small.pkl", 'wb') as f:
   pickle.dump(abnormal_incorrect, f)
+
+normal_incorrect_idx.sort()
+print(min(normal_incorrect_idx), max(normal_incorrect_idx))
+print(np.histogram(normal_incorrect_idx, bins=[0, 1000, 2000]))
+
+abnormal_incorrect_idx.sort()
+print(min(abnormal_incorrect_idx), max(abnormal_incorrect_idx))
+print(np.histogram(abnormal_incorrect_idx, bins=[0, 1000, 2000]))
