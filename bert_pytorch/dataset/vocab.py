@@ -99,7 +99,7 @@ class Vocab(TorchVocab):
         self.mask_index = 4
         # TODO:
         self.scalar_index = 5
-        super().__init__(counter, specials=["<pad>", "<unk>", "<eos>", "<sos>", "<mask>", "<scalar>"],
+        super().__init__(counter, specials=["<pad>", "<unk>", "<eos>", "<sos>", "<mask>", "<scalar>", "<log>"],
                          max_size=max_size, min_freq=min_freq)
 
     def to_seq(self, sentece, seq_len, with_eos=False, with_sos=False) -> list:
