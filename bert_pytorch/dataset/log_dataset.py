@@ -38,8 +38,10 @@ class LogDataset(Dataset):
         k_masked, k_label, t_masked, t_label = self.random_item(k, t)
 
         # [CLS] tag = SOS tag, [SEP] tag = EOS tag
-        k = [self.vocab.sos_index] + k_masked
-        k_label = [self.vocab.pad_index] + k_label
+        for i in range(self.num_scalars):
+            # TODO:
+            k = [self.vocab.sos_index] + [] + k_masked
+            k_label = [self.vocab.pad_index] + k_label
         # k_label = [self.vocab.sos_index] + k_label
 
         t = [0] + t_masked
