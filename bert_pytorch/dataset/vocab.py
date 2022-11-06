@@ -98,7 +98,8 @@ class Vocab(TorchVocab):
         self.sos_index = 3
         self.mask_index = 4
         # TODO:
-        self.scalar_index = 5
+        self.log_index = 5
+        self.scalar_index = 6
         super().__init__(counter, specials=["<pad>", "<unk>", "<eos>", "<sos>", "<mask>", "<scalar>", "<log>"],
                          max_size=max_size, min_freq=min_freq)
 
