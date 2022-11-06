@@ -52,6 +52,7 @@ class LogDataset(Dataset):
         tokens = list(k)
         new_tokens = []
         output_label = []
+        new_output_label = []
 
         time_intervals = list(t)
         time_label = []
@@ -68,7 +69,7 @@ class LogDataset(Dataset):
                 else:
                     new_tokens.append(self.vocab.scalar_index)
                 
-                output_label.append(0)
+                new_output_label.append(0)
                 
                 time_intervals.append(0)
                 time_label.append(0)
@@ -88,6 +89,7 @@ class LogDataset(Dataset):
 
                     if self.add_special_tokens:
                         new_tokens.append(self.vocab.mask_index)
+                        new_output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
                     continue
 
@@ -126,10 +128,11 @@ class LogDataset(Dataset):
                     new_tokens.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
                 output_label.append(0)
+                new_output_label.append(0)
                 time_label.append(0)
         
         # if self.add_special_tokens:
-        #     return new_tokens, output_label, time_intervals, time_label
+        #     return new_tokens, new_output_label, time_intervals, time_label
 
         return tokens, output_label, time_intervals, time_label
 
