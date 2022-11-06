@@ -128,8 +128,8 @@ class LogDataset(Dataset):
                 output_label.append(0)
                 time_label.append(0)
         
-        if self.add_special_tokens:
-            return new_tokens, output_label, time_intervals, time_label
+        # if self.add_special_tokens:
+        #     return new_tokens, output_label, time_intervals, time_label
 
         return tokens, output_label, time_intervals, time_label
 
