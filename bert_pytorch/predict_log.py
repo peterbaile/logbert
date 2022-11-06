@@ -287,7 +287,7 @@ class Predictor():
 
 
         print("test normal predicting")
-        test_normal_results, test_normal_errors = self.helper(model, self.output_dir, "test_abnormal", vocab, scale, error_dict)
+        test_normal_results, test_normal_errors = self.helper(model, self.output_dir, "test_normal", vocab, scale, error_dict)
 
         # with open(self.model_dir + "normal_incorrect_probs_small.pkl", 'wb') as f:
         #     pickle.dump(self.probs, f) 
