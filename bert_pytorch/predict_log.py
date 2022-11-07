@@ -104,6 +104,7 @@ class Predictor():
 
         self.total_masked = 0
         self.correct_pred = [0 for _ in range(options["num_candidates"])]
+        self.total_masked2 = 0
 
     def detect_logkey_anomaly(self, masked_output, masked_label):
         num_undetected_tokens = 0
@@ -215,6 +216,7 @@ class Predictor():
                 mask_index = data["bert_label"][i] > 0
                 num_masked = torch.sum(mask_index).tolist()
                 seq_results["masked_tokens"] = num_masked
+                self.total_masked2 += num_masked
 
                 if self.is_logkey:
                     num_undetected, output_seq = self.detect_logkey_anomaly(
@@ -294,6 +296,7 @@ class Predictor():
         
         print(f'correct {self.correct_pred}')
         print(f'total masked {self.total_masked}')
+        print(f'total masked2 {self.total_masked2}')
 
         # self.probs = []
         # print("test abnormal predicting")
