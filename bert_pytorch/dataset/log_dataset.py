@@ -30,11 +30,14 @@ class LogDataset(Dataset):
         self.mask_ratio = mask_ratio
         self.add_special_tokens = True
 
-        self.scalar_i = set()
+        # self.scalar_i = set()
 
-        for token in self.vocab.stoi:
-            if token.isdigit() and int(token) >= 90:
-                self.scalar_i.add(self.vocab.stoi[token])
+        # for token in self.vocab.stoi:
+        #     if :
+        #         self.scalar_i.add(self.vocab.stoi[token])
+    
+    def is_scalar(self, token):
+        return token.isdigit() and int(token) >= 90
 
     def __len__(self):
         return self.corpus_lines
@@ -54,10 +57,10 @@ class LogDataset(Dataset):
             new_t_label = []
 
             for idx, i in enumerate(k):
-                if i in self.scalar_i:
+                if is_scalar(i):
                     new_k_masked.append(self.vocab.scalar_index)
                 else:
-                    if (i == 0) or (i >= 1 and k[idx - 1] in self.scalar_i):
+                    if (idx == 0) or (idx >= 1 and is_scalar(k[idx - 1])):
                         new_k_masked.append(self.vocab.log_index)
                 
                 new_k_label.append(0)
