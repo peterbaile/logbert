@@ -30,6 +30,12 @@ class LogDataset(Dataset):
         self.mask_ratio = mask_ratio
         self.add_special_tokens = True
 
+        self.scalar_i = set()
+
+        for token in self.vocab.stoi:
+            if int(token) >= 90:
+                self.scalar_i.add(self.vocab.stoi[token])
+
     def __len__(self):
         return self.corpus_lines
 
@@ -39,9 +45,40 @@ class LogDataset(Dataset):
         k_masked, k_label, t_masked, t_label = self.random_item(k, t)
 
         # [CLS] tag = SOS tag, [SEP] tag = EOS tag
+        
+        # k_label = [self.vocab.sos_index] + k_label
+        if self.add_special_tokens:
+            new_k_masked = []
+            new_k_label = []
+            new_t_masked = []
+            new_t_label = []
+
+            for idx, i in enumerate(k):
+                if i in self.scalar_i:
+                    new_k_masked.append(self.vocab.scalar_index)
+                else:
+                    if (i == 0) or (i >= 1 and k[idx - 1] in self.scalar_i):
+                        new_k_masked.append(self.vocab.log_index)
+                
+                new_k_label.append(0)
+                new_k_masked.append(k_masked[idx])
+                new_k_label.append(k_label[idx])
+
+                new_t_masked.append(0)
+                new_t_label.append(0)
+                new_t_masked.append(t_masked[idx])
+                new_t_label.append(t_label[idx])
+            
+            new_k_masked = [self.vocab.sos_index] + new_k_masked
+            new_k_label = [self.vocab.pad_index] + new_k_label
+
+            new_t_masked = [0] + new_t_masked
+            new_t_label = [self.vocab.pad_index] + new_t_label
+
+            return new_k_masked, new_k_label, new_t_masked, new_t_label
+        
         k = [self.vocab.sos_index] + k_masked
         k_label = [self.vocab.pad_index] + k_label
-        # k_label = [self.vocab.sos_index] + k_label
 
         t = [0] + t_masked
         t_label = [self.vocab.pad_index] + t_label
@@ -63,16 +100,16 @@ class LogDataset(Dataset):
             time_int = time_intervals[i]
 
             # add scalars special keys
-            if self.add_special_tokens:
-                if int(token) < 90:
-                    new_tokens.append(self.vocab.log_index)
-                else:
-                    new_tokens.append(self.vocab.scalar_index)
+            # if self.add_special_tokens:
+            #     if int(token) < 90:
+            #         new_tokens.append(self.vocab.log_index)
+            #     else:
+            #         new_tokens.append(self.vocab.scalar_index)
                 
-                new_output_label.append(0)
+            #     new_output_label.append(0)
                 
-                time_intervals.append(0)
-                time_label.append(0)
+            #     time_intervals.append(0)
+            #     time_label.append(0)
 
             
             prob = random.random()
@@ -87,9 +124,9 @@ class LogDataset(Dataset):
                     time_label.append(time_int)
                     time_intervals[i] = 0
 
-                    if self.add_special_tokens:
-                        new_tokens.append(self.vocab.mask_index)
-                        new_output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
+                    # if self.add_special_tokens:
+                    #     new_tokens.append(self.vocab.mask_index)
+                    #     new_output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
                     continue
 
@@ -99,22 +136,22 @@ class LogDataset(Dataset):
                 if prob < 0.8:
                     tokens[i] = self.vocab.mask_index
 
-                    if self.add_special_tokens:
-                        new_tokens.append(self.vocab.mask_index)
+                    # if self.add_special_tokens:
+                    #     new_tokens.append(self.vocab.mask_index)
 
                 # 10% randomly change token to random token
                 elif prob < 0.9:
                     tokens[i] = random.randrange(len(self.vocab))
 
-                    if self.add_special_tokens:
-                        new_tokens.append(random.randrange(len(self.vocab)))
+                    # if self.add_special_tokens:
+                    #     new_tokens.append(random.randrange(len(self.vocab)))
 
                 # 10% randomly change token to current token
                 else:
                     tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
 
-                    if self.add_special_tokens:
-                        new_tokens.append(self.vocab.stoi.get(token, self.vocab.unk_index))
+                    # if self.add_special_tokens:
+                    #     new_tokens.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
                 output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
@@ -124,8 +161,8 @@ class LogDataset(Dataset):
             else:
                 tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
                 
-                if self.add_special_tokens:
-                    new_tokens.append(self.vocab.stoi.get(token, self.vocab.unk_index))
+                # if self.add_special_tokens:
+                #     new_tokens.append(self.vocab.stoi.get(token, self.vocab.unk_index))
 
                 output_label.append(0)
                 new_output_label.append(0)
