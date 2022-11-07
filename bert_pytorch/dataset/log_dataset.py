@@ -31,7 +31,7 @@ class LogDataset(Dataset):
         self.corpus_lines = len(log_corpus)
 
         self.mask_ratio = mask_ratio
-        self.add_special_tokens = True
+        self.add_special_tokens = False
 
         # self.scalar_i = set()
 
