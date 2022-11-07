@@ -33,7 +33,7 @@ class LogDataset(Dataset):
         self.scalar_i = set()
 
         for token in self.vocab.stoi:
-            if int(token) >= 90:
+            if token.isdigit() and int(token) >= 90:
                 self.scalar_i.add(self.vocab.stoi[token])
 
     def __len__(self):
