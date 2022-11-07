@@ -16,7 +16,7 @@ from bert_pytorch.dataset.utils import seed_everything
 
 options = dict()
 options['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
-options["output_dir"] = "../output/hdfs-delta-7500-2500/"
+options["output_dir"] = "../output/hdfs-7500-2500/"
 options["model_dir"] = options["output_dir"] + "bert/"
 options["model_path"] = options["model_dir"] + "best_bert.pth"
 options["train_vocab"] = options["output_dir"] + "train"
