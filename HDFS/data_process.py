@@ -78,7 +78,7 @@ def hdfs_sampling(log_file, window='session'):
     print("hdfs sampling done")
 
 
-def generate_train_test(hdfs_sequence_file, n=None, n_normal=None, n_abnormal=None, normal_ratio=0, abnormal_ratio=0.1):
+def generate_train_test(hdfs_sequence_file, n=None, n_normal=None, n_abnormal=None, normal_ratio=0, abnormal_ratio=0):
     blk_label_dict = {}
     blk_label_file = os.path.join(input_dir, "anomaly_label.csv")
     blk_df = pd.read_csv(blk_label_file)
@@ -121,4 +121,4 @@ if __name__ == "__main__":
     # parser(input_dir, output_dir, log_file, log_format, 'drain')
     # mapping()
     # hdfs_sampling(log_structured_file)
-    generate_train_test(log_sequence_file, n_normal=0, n_abnormal=10000)
+    generate_train_test(log_sequence_file, n_normal=10000, n_abnormal=0)
