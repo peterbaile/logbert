@@ -31,7 +31,10 @@ if __name__ == '__main__':
   # model.view_model()
 
   identified_estimand = model.identify_effect(proceed_when_unidentifiable=True)
-  print(identified_estimand.encode('utf-8'))
+  print(identified_estimand)
   causal_estimate = model.estimate_effect(identified_estimand,
         method_name="backdoor.propensity_score_stratification")
-  # print(causal_estimate)
+  print(causal_estimate)
+  refute_results = model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause")
+  print(refute_results)
+  
